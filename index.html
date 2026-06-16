@@ -2,134 +2,297 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>웹 게임</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🫧 말랑말랑 화학 방울 게임 🫧</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-
+    
     <style>
-        /* [중요] 게임 내 모든 텍스트 요소를 주아체로 강제 지정 */
+        :root {
+            --bg-color: #f0f4f8;
+            --panel-bg: #ffffff;
+            --text-color: #2c3e50;
+            --primary-color: #a8dadc;
+            --primary-dark: #457b9d;
+            --accent-color: #e63946;
+            --card-border: rgba(69, 123, 157, 0.15);
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+            --text-color: #e2e8f0;
+            --primary-color: #0f3460;
+            --primary-dark: #4ea8de;
+            --accent-color: #e94560;
+            --card-border: rgba(78, 168, 222, 0.2);
+        }
+
         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* 전역 요소에 최상위 우선순위로 주아체 적용 */
             font-family: 'Jua', sans-serif !important;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100dvh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        #game-container {
-            position: relative;
-            width: 400px;
-            height: 600px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
             overflow: hidden;
-            border-radius: 10px;
         }
 
-        #score {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            z-index: 10;
-        }
-
-        #game-over {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 10;
-        }
-
-        #game-over h2 {
-            font-size: 40px;
-            color: #ff4757;
-            margin-bottom: 20px;
-        }
-
-        .btn {
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px 20px;
-            font-size: 18px;
-            background-color: #2ed573;
+            background-color: var(--panel-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .title-area h1 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+        }
+
+        .logo-area {
+            font-size: 1.3rem;
+            color: #ff4d6d;
+            background: linear-gradient(135deg, #fff0f3, #ffccd5);
+            padding: 6px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 8px rgba(255, 77, 109, 0.15);
+            border: 2px dashed #ffb3c1;
+        }
+        .dark-mode .logo-area {
+            background: linear-gradient(135deg, #4c0519, #881337);
+            color: #ffe4e6;
+            border-color: #f43f5e;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            width: 100vw;
+            height: calc(100dvh - 60px);
+            position: relative;
+        }
+
+        #control-panel {
+            width: 32%;
+            min-width: 310px;
+            background-color: var(--panel-bg);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border-right: 1px solid var(--card-border);
+            overflow-y: auto;
+            z-index: 5;
+        }
+
+        #game-panel {
+            width: 68%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at center, rgba(168, 218, 220, 0.15) 0%, transparent 80%);
+        }
+
+        .card {
+            background: rgba(168, 218, 220, 0.08);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        .student-form {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr) 2fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        input, select, button {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            font-size: 1.05rem;
+            outline: none;
+        }
+        button {
+            background-color: var(--primary-dark);
             color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            transition: background 0.2s;
+            font-weight: bold;
+        }
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
-        .btn:hover {
-            background-color: #26af5f;
+        .scoreboard {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: linear-gradient(135deg, #a8dadc, #457b9d);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1.15rem;
+        }
+        .dark-mode .scoreboard {
+            background: linear-gradient(135deg, #1d3557, #457b9d);
+        }
+        .scoreboard-row {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
         }
 
-        canvas {
-            display: block;
-            background-color: #dfe4ea;
+        .rank-box {
+            max-height: 110px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.02);
+            padding: 6px;
+            border-radius: 8px;
+        }
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 10px;
+            font-size: 0.95rem;
+        }
+
+        .util-tray {
+            margin-top: auto;
+            display: flex;
+            gap: 8px;
+        }
+        .util-tray button {
+            flex: 1;
+            background-color: rgba(0,0,0,0.04);
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        #game-svg {
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            background-color: rgba(168, 218, 220, 0.03);
+        }
+
+        #input-dock {
+            padding: 16px;
+            background-color: var(--panel-bg);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        #answer-input {
+            width: 100%;
+            max-width: 450px;
+            font-size: 1.4rem;
+            text-align: center;
+            border: 2px solid var(--primary-dark);
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .toast-node {
+            background-color: rgba(29, 53, 87, 0.92);
+            color: #ffffff;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 1.05rem;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .modal-mask {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(29, 53, 87, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-mask.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-window {
+            background-color: var(--panel-bg);
+            border-radius: 20px;
+            width: 85%;
+            max-width: 420px;
+            padding: 28px;
+            text-align: center;
+        }
+
+        /* SVG 내부 텍스트에도 폰트 패밀리 명시적 세팅 */
+        .subscript-node { font-size: 18px; font-weight: bold; fill: #1e293b; font-family: 'Jua', sans-serif; }
+        .superscript-node { font-size: 18px; font-weight: bold; fill: #1e293b; font-family: 'Jua', sans-serif; }
+        .screen-guide-text { fill: #457b9d; font-size: 24px; font-weight: bold; font-family: 'Jua', sans-serif; }
+
+        @media (max-width: 768px) {
+            main { flex-direction: column; height: auto; overflow-y: auto; }
+            #control-panel { width: 100%; min-width: 100%; }
+            #game-panel { width: 100%; height: 55dvh; min-height: 400px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="score">점수: 0</div>
-        
-        <div id="game-over">
-            <h2>GAME OVER</h2>
-            <button class="btn" onclick="resetGame()">다시 시작</button>
+    <header>
+        <div class="title-area">
+            <h1>🫧 말랑말랑 화학 방울 게임 🫧</h1>
         </div>
+        <div class="logo-area">♥지민쌤과 두근두근 과학 학습♥</div>
+    </header>
 
-        <canvas id="gameCanvas" width="400" height="600"></canvas>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        let score = 0;
-        let isGameOver = false;
-
-        // [참고] Canvas(기능 구현부) 내부에 글씨를 쓸 때도 주아체가 적용되도록 설정
-        function drawScore() {
-            ctx.fillStyle = '#333333';
-            ctx.font = "24px 'Jua'"; // Canvas 전용 폰트 설정
-            ctx.fillText("점수: " + score, 20, 40);
-        }
-
-        function resetGame() {
-            score = 0;
-            isGameOver = false;
-            document.getElementById('game-over').style.display = 'none';
-            // 여기에 게임 리셋 로직 추가
-            animate();
-        }
-
-        function animate() {
-            if (isGameOver) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 게임 요소들 그리기 예시
-            drawScore();
-
-            requestAnimationFrame(animate);
-        }
-
-        // 게임 시작
-        animate();
-    </script>
-</body>
-</html>
+    <main>
+        <div id="control-panel">
+            <div class="card">
+                <h2>👤 학생 정보 입력</h2>
+                <div class="student-form">
+                    <input type="number" id="stu-grade" value="2" min="1" max="3">
+                    <input type="number" id="stu-class" value="1" min="1" max="15">
+                    <input type="number" id="stu-number" value="1" min="1" max="40">
+                    <input type="text" id="stu-name" value="홍길동" placeholder="이름">
+                </div>
