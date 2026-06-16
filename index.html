@@ -2,145 +2,134 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🫧 말랑말랑 화학 방울 게임 🫧</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웹 게임</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-    
+
     <style>
-        /* [이중잠금] 웹폰트가 더 확실하게 로드되도록 CSS 최상단에 한번 더 심어줍니다 */
-        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
-
-        :root {
-            --bg-color: #f0f4f8;
-            --panel-bg: #ffffff;
-            --text-color: #2c3e50;
-            --primary-color: #a8dadc;
-            --primary-dark: #457b9d;
-            --accent-color: #e63946;
-            --card-border: rgba(69, 123, 157, 0.15);
-        }
-
-        .dark-mode {
-            --bg-color: #1a1a2e;
-            --panel-bg: #16213e;
-            --text-color: #e2e8f0;
-            --primary-color: #0f3460;
-            --primary-dark: #4ea8de;
-            --accent-color: #e94560;
-            --card-border: rgba(78, 168, 222, 0.2);
-        }
-
+        /* [중요] 게임 내 모든 텍스트 요소를 주아체로 강제 지정 */
         * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            /* 이제 Jua 폰트가 완벽히 연동되어 우선적으로 출력됩니다 */
-            font-family: 'Jua', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif !important;
-            -webkit-user-select: none;
-            user-select: none;
+            font-family: 'Jua', sans-serif !important;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100dvh;
-            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
-            transition: background-color 0.3s, color 0.3s;
-            overflow: hidden;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            background-color: var(--panel-bg);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
             z-index: 10;
-            border-bottom: 1px solid var(--card-border);
         }
 
-        .title-area h1 {
-            font-size: 2rem;
-            color: var(--primary-dark);
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
         }
 
-        .logo-area {
-            font-size: 1.3rem;
-            color: #ff4d6d;
-            background: linear-gradient(135deg, #fff0f3, #ffccd5);
-            padding: 6px 16px;
-            border-radius: 50px;
-            box-shadow: 0 4px 8px rgba(255, 77, 109, 0.15);
-            border: 2px dashed #ffb3c1;
-        }
-        .dark-mode .logo-area {
-            background: linear-gradient(135deg, #4c0519, #881337);
-            color: #ffe4e6;
-            border-color: #f43f5e;
+        #game-over h2 {
+            font-size: 40px;
+            color: #ff4757;
+            margin-bottom: 20px;
         }
 
-        main {
-            flex: 1;
-            display: flex;
-            width: 100vw;
-            height: calc(100dvh - 60px);
-            position: relative;
+        .btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #2ed573;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        #control-panel {
-            width: 32%;
-            min-width: 310px;
-            background-color: var(--panel-bg);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            border-right: 1px solid var(--card-border);
-            overflow-y: auto;
-            z-index: 5;
+        .btn:hover {
+            background-color: #26af5f;
         }
 
-        #game-panel {
-            width: 68%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            background: radial-gradient(circle at center, rgba(168, 218, 220, 0.15) 0%, transparent 80%);
+        canvas {
+            display: block;
+            background-color: #dfe4ea;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score">점수: 0</div>
+        
+        <div id="game-over">
+            <h2>GAME OVER</h2>
+            <button class="btn" onclick="resetGame()">다시 시작</button>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let isGameOver = false;
+
+        // [참고] Canvas(기능 구현부) 내부에 글씨를 쓸 때도 주아체가 적용되도록 설정
+        function drawScore() {
+            ctx.fillStyle = '#333333';
+            ctx.font = "24px 'Jua'"; // Canvas 전용 폰트 설정
+            ctx.fillText("점수: " + score, 20, 40);
         }
 
-        .card {
-            background: rgba(168, 218, 220, 0.08);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 14px;
+        function resetGame() {
+            score = 0;
+            isGameOver = false;
+            document.getElementById('game-over').style.display = 'none';
+            // 여기에 게임 리셋 로직 추가
+            animate();
         }
 
-        h2 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: var(--primary-dark);
+        function animate() {
+            if (isGameOver) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 게임 요소들 그리기 예시
+            drawScore();
+
+            requestAnimationFrame(animate);
         }
 
-        .student-form {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr) 2fr;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        input, select, button {
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--card-border);
-            background-color: var(--panel-bg);
-            color: var(--text-color);
-            font-size: 1.05rem;
-            outline: none;
-        }
-        button {
-            background-color: var(--primary-dark);
+        // 게임 시작
+        animate();
+    </script>
+</body>
+</html>
