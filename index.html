@@ -407,487 +407,457 @@
         
         let timeRemaining = 180; 
         let timerIntervalId = null;
+        let animationFrameId = null;
         let currentSpeedMultiplier = 1.0; 
 
         let lastGenerationTimestamp = 0;
-        let intervalConfig = 2200; 
+        let intervalConfig = 2000; 
 
         let audioContextInstance = null;
         let audioMuteState = false;
-        let bgmNode = null;
+        let bgmIntervalId = null;
         let bgmActive = false;
 
-        const bubbleContainerGroup = document.getElementById('bubble-entities-group');
-        const particleContainerGroup = document.getElementById('fx-particles-group');
-
-        function triggerAudioSynthesizer(eventTone) {
-            if (audioMuteState) return;
-            try {
-                if (!audioContextInstance) {
-                    audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioContextInstance && audioContextInstance.state === 'suspended') {
-                    audioContextInstance.resume();
-                }
-                
-                const ctx = audioContextInstance;
-                const osc = ctx.createOscillator();
-                const gainNode = ctx.createGain();
-                osc.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                const timeline = ctx.currentTime;
-
-                if (eventTone === 'click') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(400, timeline);
-                    gainNode.gain.setValueAtTime(0.1, timeline);
-                    gainNode.gain.linearRampToValueAtTime(0, timeline + 0.05);
-                    osc.start(); osc.stop(timeline + 0.05);
-                } else if (eventTone === 'pop') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, timeline);
-                    osc.frequency.exponentialRampToValueAtTime(783.99, timeline + 0.12);
-                    gainNode.gain.setValueAtTime(0.15, timeline);
-                    gainNode.gain.linearRampToValueAtTime(0, timeline + 0.12);
-                    osc.start(); osc.stop(timeline + 0.12);
-                } else if (eventTone === 'damage') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, timeline);
-                    osc.frequency.linearRampToValueAtTime(110, timeline + 0.25);
-                    gainNode.gain.setValueAtTime(0.15, timeline);
-                    gainNode.gain.linearRampToValueAtTime(0, timeline + 0.25);
-                    osc.start(); osc.stop(timeline + 0.25);
-                } else if (eventTone === 'fanfare') {
-                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-                        const subOsc = ctx.createOscillator();
-                        const subGain = ctx.createGain();
-                        subOsc.connect(subGain); subGain.connect(ctx.destination);
-                        subOsc.frequency.setValueAtTime(freq, timeline + idx * 0.08);
-                        subGain.gain.setValueAtTime(0.1, timeline + idx * 0.08);
-                        subGain.gain.linearRampToValueAtTime(0, timeline + idx * 0.08 + 0.15);
-                        subOsc.start(timeline + idx * 0.08); subOsc.stop(timeline + idx * 0.08 + 0.15);
-                    });
-                }
-            } catch(e) {
-                console.log("Audio 정책 우회 완료");
+        function initAudio() {
+            if (!audioContextInstance) {
+                audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContextInstance && audioContextInstance.state === 'suspended') {
+                audioContextInstance.resume();
             }
         }
 
-        function toggleBackgroundAmbiance() {
-            if (bgmActive) {
-                if (bgmNode) { try { bgmNode.stop(); } catch(e){} bgmNode = null; }
-                bgmActive = false;
-                document.getElementById('bgm-toggle-btn').innerText = "🎵 배경음 OFF";
-            } else {
-                if (audioMuteState) return;
-                try {
-                    if (!audioContextInstance) audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-                    if (audioContextInstance.state === 'suspended') audioContextInstance.resume();
-                    
-                    const ctx = audioContextInstance;
-                    bgmNode = ctx.createOscillator();
-                    const filter = ctx.createBiquadFilter();
+        function triggerAudioSynthesizer(type) {
+            if (audioMuteState) return;
+            try {
+                initAudio();
+                const ctx = audioContextInstance;
+                const now = ctx.currentTime;
+                
+                if (type === 'correct') {
+                    const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
-                    
-                    bgmNode.type = 'sine';
-                    bgmNode.frequency.setValueAtTime(140, ctx.currentTime);
-                    filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(200, ctx.currentTime);
-                    gain.gain.setValueAtTime(0.04, ctx.currentTime);
-                    
-                    bgmNode.connect(filter);
-                    filter.connect(gain);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
                     gain.connect(ctx.destination);
-                    bgmNode.start();
-                    bgmActive = true;
-                    document.getElementById('bgm-toggle-btn').innerText = "🎵 배경음 ON";
-                } catch(e) {
-                    console.log("BGM 재생 대기");
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(80, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'fanfare') {
+                    [440, 554, 659, 880].forEach((f, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.frequency.value = f;
+                        gain.gain.setValueAtTime(0.1, now + i*0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + i*0.1 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + i*0.1);
+                        osc.stop(now + i*0.1 + 0.4);
+                    });
                 }
-            }
+            } catch (e) { console.log("Audio Error context:", e); }
         }
 
         function toggleAudioSystem() {
             audioMuteState = !audioMuteState;
             document.getElementById('mute-toggle-btn').innerText = audioMuteState ? "🔇 사운드 OFF" : "🔊 사운드 ON";
-            if (audioMuteState && bgmActive) toggleBackgroundAmbiance();
         }
 
-        function toggleVisualTheme() {
-            document.body.classList.toggle('dark-mode');
-        }
-
-        function pushNotificationToast(message) {
-            const container = document.getElementById('toast-container');
-            const node = document.createElement('div');
-            node.className = 'toast-node';
-            node.innerText = message;
-            container.appendChild(node);
-            setTimeout(() => node.remove(), 2000);
-        }
-
-        function startTimerSystem() {
-            if(timerIntervalId) clearInterval(timerIntervalId);
-            timeRemaining = 180;
-            currentSpeedMultiplier = 1.0;
-            
-            timerIntervalId = setInterval(() => {
-                if (!engineActive) return;
-                timeRemaining--;
-                
-                const minutes = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
-                const seconds = (timeRemaining % 60).toString().padStart(2, '0');
-                document.getElementById('timer-display').innerText = `⏱️ 남은 시간: ${minutes}:${seconds}`;
-
-                if (timeRemaining % 30 === 0 && timeRemaining > 0) {
-                    currentSpeedMultiplier += 0.25;
-                    pushNotificationToast("🌊 화학 반응 속도가 빨라집니다!");
-                }
-
-                if (timeRemaining <= 0) {
-                    clearInterval(timerIntervalId);
-                    terminateGameSession(true);
-                }
-            }, 1000);
-        }
-
-        function initializeGameSession() {
-            try {
-                if (!audioContextInstance) {
-                    audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioContextInstance.state === 'suspended') audioContextInstance.resume();
-            } catch(e){}
-
-            triggerAudioSynthesizer('click');
-
-            const nameInput = document.getElementById('stu-name').value.trim();
-            if(!nameInput) {
-                pushNotificationToast("👤 학생 이름을 바르게 적어주세요!");
-                return;
-            }
-
-            bubbleContainerGroup.innerHTML = "";
-            particleContainerGroup.innerHTML = "";
-            activeBubbles = [];
-            activeParticles = [];
-            
-            scoreState = 0;
-            comboState = 0; 
-            healthState = 5;
-            engineActive = true;
-            lastGenerationTimestamp = performance.now();
-
-            document.getElementById('svg-background-notice').style.display = "none";
-            document.getElementById('start-engine-btn').disabled = true;
-            document.getElementById('answer-input').disabled = false;
-            document.getElementById('submit-btn').disabled = false;
-            document.getElementById('answer-input').value = "";
-            document.getElementById('answer-input').focus();
-
-            refreshScoreBoard();
-            startTimerSystem();
-            pushNotificationToast("🧪 화학 방울 게임을 시작합니다!");
-
-            if (!bgmActive && !audioMuteState) {
-                setTimeout(toggleBackgroundAmbiance, 100);
-            }
-
-            requestAnimationFrame(coreExecutionLoop);
-        }
-
-        function coreExecutionLoop(currentTimestamp) {
-            if (!engineActive) return;
-
-            if (currentTimestamp - lastGenerationTimestamp > intervalConfig) {
-                generateChemicalBubble();
-                lastGenerationTimestamp = currentTimestamp;
-            }
-
-            processBubbleKinematics();
-            processParticleKinematics();
-
-            requestAnimationFrame(coreExecutionLoop);
-        }
-
-        function renderSafeChemicalFormula(svgTextNode, rawSymbol) {
-            svgTextNode.innerHTML = "";
-            let i = 0;
-            
-            while (i < rawSymbol.length) {
-                if (rawSymbol[i] === '_') {
-                    i++;
-                    let subText = "";
-                    while (i < rawSymbol.length && /[0-9]/.test(rawSymbol[i])) {
-                        subText += rawSymbol[i];
-                        i++;
-                    }
-                    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    tspan.setAttribute("class", "subscript-node");
-                    tspan.setAttribute("dy", "10"); 
-                    tspan.textContent = subText;
-                    svgTextNode.appendChild(tspan);
-
-                    const resetSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    resetSpan.setAttribute("dy", "-10");
-                    svgTextNode.appendChild(resetSpan);
-
-                } else if (rawSymbol[i] === '^') {
-                    i++;
-                    let supText = "";
-                    while (i < rawSymbol.length && /[0-9\+\-]/.test(rawSymbol[i])) {
-                        supText += rawSymbol[i];
-                        i++;
-                    }
-                    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    tspan.setAttribute("class", "superscript-node");
-                    tspan.setAttribute("dy", "-12"); 
-                    tspan.textContent = supText.replace('-', '⁻').replace('+', '⁺');
-                    svgTextNode.appendChild(tspan);
-
-                    const resetSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    resetSpan.setAttribute("dy", "12");
-                    svgTextNode.appendChild(resetSpan);
-                } else {
-                    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    tspan.textContent = rawSymbol[i];
-                    svgTextNode.appendChild(tspan);
-                    i++;
-                }
+        function toggleBackgroundAmbiance() {
+            bgmActive = !bgmActive;
+            const btn = document.getElementById('bgm-toggle-btn');
+            if (bgmActive) {
+                btn.innerText = "🎵 배경음 ON";
+                bgmIntervalId = setInterval(() => {
+                    if(audioMuteState || !engineActive) return;
+                    try {
+                        initAudio();
+                        const now = audioContextInstance.currentTime;
+                        const osc = audioContextInstance.createOscillator();
+                        const gain = audioContextInstance.createGain();
+                        const notes = [261.63, 329.63, 392.00, 440.00];
+                        osc.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+                        osc.type = 'sine';
+                        gain.gain.setValueAtTime(0.03, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                        osc.connect(gain);
+                        gain.connect(audioContextInstance.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.8);
+                    } catch(e){}
+                }, 1000);
+            } else {
+                btn.innerText = "🎵 배경음 OFF";
+                if(bgmIntervalId) clearInterval(bgmIntervalId);
             }
         }
 
-        function cleanFormulaToken(rawSymbol) {
-            return rawSymbol.replace('_', '').replace('^', '');
+        function toggleVisualTheme() { 
+            document.body.classList.toggle('dark-mode'); 
+        }
+
+        function createChemicalSvgText(symbol, gElement) {
+            const textNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textNode.setAttribute("class", "chemical-text");
+            textNode.setAttribute("text-anchor", "middle");
+            textNode.setAttribute("dominant-baseline", "central");
+            textNode.setAttribute("y", "0");
+
+            const regex = /([A-Za-z]+)(?:_([0-9A-Za-z]+))?(?:\^([0-9\+\-]+))?/g;
+            let match;
+            let hasComplexFormatting = false;
+
+            while ((match = regex.exec(symbol)) !== null) {
+                hasComplexFormatting = true;
+                const base = match[1];
+                const sub = match[2];
+                const sup = match[3];
+
+                const tspanBase = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspanBase.textContent = base;
+                textNode.appendChild(tspanBase);
+
+                if (sub) {
+                    const tspanSub = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    tspanSub.textContent = sub;
+                    tspanSub.setAttribute("class", "subscript-node");
+                    tspanSub.setAttribute("dy", "8");
+                    textNode.appendChild(tspanSub);
+                    
+                    const tspanReset = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    tspanReset.setAttribute("dy", "-8");
+                    textNode.appendChild(tspanReset);
+                }
+
+                if (sup) {
+                    const tspanSup = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    tspanSup.textContent = sup;
+                    tspanSup.setAttribute("class", "superscript-node");
+                    tspanSup.setAttribute("dy", "-10");
+                    textNode.appendChild(tspanSup);
+
+                    const tspanReset = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    tspanReset.setAttribute("dy", "10");
+                    textNode.appendChild(tspanReset);
+                }
+            }
+
+            if (!hasComplexFormatting) {
+                textNode.textContent = symbol;
+            }
+            gElement.appendChild(textNode);
         }
 
         function generateChemicalBubble() {
             const scope = document.getElementById('mission-scope').value;
             let pool = [];
+            
             if (scope === 'total') {
                 pool = [...CHEMICAL_REGISTRY.elements, ...CHEMICAL_REGISTRY.molecules, ...CHEMICAL_REGISTRY.ions];
             } else {
                 pool = CHEMICAL_REGISTRY[scope];
             }
 
-            const item = pool[Math.floor(Math.random() * pool.length)];
-            const radius = 58; 
-            const xPos = Math.random() * (canvasWidth - radius * 2) + radius;
-            const yPos = -radius;
+            const chosen = pool[Math.floor(Math.random() * pool.length)];
+            const radius = 55;
+            const x = Math.random() * (canvasWidth - radius * 2) + radius;
+            const y = -radius;
+            const speed = (Math.random() * 1.2 + 0.8) * currentSpeedMultiplier;
 
-            const colorPalette = [198, 220, 162, 340, 24, 155, 270, 185];
-            const hue = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            const colors = ["#ffadad", "#ffd6a5", "#fdffb6", "#caf0f8", "#dec0f1", "#b9fbc0"];
+            const bubbleColor = colors[Math.floor(Math.random() * colors.length)];
 
-            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const gGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
             
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute("r", radius.toString());
-            circle.setAttribute("fill", `hsla(${hue}, 85%, 85%, 0.85)`);
-            circle.setAttribute("stroke", `hsl(${hue}, 60%, 45%)`);
-            circle.setAttribute("stroke-width", "3.5");
+            circle.setAttribute("r", radius);
+            circle.setAttribute("fill", bubbleColor);
+            circle.setAttribute("fill-opacity", "0.65");
+            circle.setAttribute("stroke", "#457b9d");
+            circle.setAttribute("stroke-width", "2.5");
+            gGroup.appendChild(circle);
 
-            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            text.setAttribute("text-anchor", "middle");
-            text.setAttribute("y", "8"); 
-            text.setAttribute("font-size", "28px");
-            text.setAttribute("font-weight", "bold");
-            text.setAttribute("fill", "#1e293b");
+            const highlight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            highlight.setAttribute("cx", -radius/3);
+            highlight.setAttribute("cy", -radius/3);
+            highlight.setAttribute("r", radius/5);
+            highlight.setAttribute("fill", "#ffffff");
+            highlight.setAttribute("fill-opacity", "0.6");
+            gGroup.appendChild(highlight);
 
-            renderSafeChemicalFormula(text, item.symbol);
-
-            g.appendChild(circle);
-            g.appendChild(text);
-            bubbleContainerGroup.appendChild(g);
+            createChemicalSvgText(chosen.symbol, gGroup);
+            document.getElementById('bubble-entities-group').appendChild(gGroup);
 
             activeBubbles.push({
-                dom: g, x: xPos, y: yPos, r: radius,
-                formula: cleanFormulaToken(item.symbol), solutions: item.target,
-                speed: (1.0 + Math.random() * 1.0) * currentSpeedMultiplier,
-                seed: Math.random() * 100
+                element: gGroup,
+                x: x,
+                y: y,
+                radius: radius,
+                speed: speed,
+                symbol: chosen.symbol,
+                targets: chosen.target
             });
         }
 
-        function processBubbleKinematics() {
-            for (let i = activeBubbles.length - 1; i >= 0; i--) {
-                const b = activeBubbles[i];
-                b.y += b.speed;
-                b.seed += 0.025;
-                b.x += Math.sin(b.seed) * 1.3;
-
-                if (b.x - b.r < 0) b.x = b.r;
-                if (b.x + b.r > canvasWidth) b.x = canvasWidth - b.r;
-
-                b.dom.setAttribute("transform", `translate(${b.x}, ${b.y})`);
-
-                if (b.y - b.r > canvasHeight) {
-                    triggerAudioSynthesizer('damage');
-                    healthState--;
-                    comboState = 0; 
-                    refreshScoreBoard();
-                    pushNotificationToast(`💥 방울 탈출! 정답은 [${b.solutions[0]}]`);
-                    
-                    b.dom.remove();
-                    activeBubbles.splice(i, 1);
-
-                    if (healthState <= 0) {
-                        terminateGameSession(false);
-                    }
-                }
-            }
-        }
-
-        function createExplosionEffect(x, y) {
-            const colors = ['#ff4d6d', '#ffb3c1', '#38bdf8', '#c084fc', '#fbbf24'];
-            for (let i = 0; i < 16; i++) {
-                const p = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                const radius = 3 + Math.random() * 4;
-                p.setAttribute("r", radius.toString());
-                p.setAttribute("fill", colors[Math.floor(Math.random() * colors.length)]);
-                particleContainerGroup.appendChild(p);
-
+        function createExplosionParticles(x, y) {
+            const group = document.getElementById('fx-particles-group');
+            for (let i = 0; i < 12; i++) {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 const angle = Math.random() * Math.PI * 2;
-                const force = 3 + Math.random() * 5;
+                const speed = Math.random() * 4 + 2;
+                
+                circle.setAttribute("r", Math.random() * 5 + 3);
+                circle.setAttribute("fill", "#4ea8de");
+                group.appendChild(circle);
 
                 activeParticles.push({
-                    dom: p,
-                    x: x, y: y,
-                    vx: Math.cos(angle) * force,
-                    vy: Math.sin(angle) * force,
-                    alpha: 1.0,
-                    decay: 0.03 + Math.random() * 0.03
+                    element: circle,
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    decay: Math.random() * 0.05 + 0.04
                 });
             }
         }
 
-        function processParticleKinematics() {
+        function mainGameLoop(timestamp) {
+            if (!engineActive) return;
+
+            if (!lastGenerationTimestamp) lastGenerationTimestamp = timestamp;
+            if (timestamp - lastGenerationTimestamp > intervalConfig) {
+                generateChemicalBubble();
+                lastGenerationTimestamp = timestamp;
+                if (intervalConfig > 900) intervalConfig -= 25;
+                currentSpeedMultiplier += 0.02;
+            }
+
+            for (let i = activeBubbles.length - 1; i >= 0; i--) {
+                const b = activeBubbles[i];
+                b.y += b.speed;
+                b.element.setAttribute("transform", `translate(${b.x}, ${b.y})`);
+
+                if (b.y > canvasHeight + b.radius) {
+                    b.element.remove();
+                    activeBubbles.splice(i, 1);
+                    
+                    healthState--;
+                    comboState = 0;
+                    triggerAudioSynthesizer('wrong');
+                    showToastNotification("방울을 놓쳤습니다! 😢");
+                    updateScoreboardDisplay();
+
+                    if (healthState <= 0) {
+                        terminateGameSession(false);
+                        return;
+                    }
+                }
+            }
+
             for (let i = activeParticles.length - 1; i >= 0; i--) {
                 const p = activeParticles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.1; 
-                p.alpha -= p.decay;
-
-                if (p.alpha <= 0) {
-                    p.dom.remove();
+                p.life -= p.decay;
+                if (p.life <= 0) {
+                    p.element.remove();
                     activeParticles.splice(i, 1);
                 } else {
-                    p.dom.setAttribute("cx", p.x.toString());
-                    p.dom.setAttribute("cy", p.y.toString());
-                    p.dom.setAttribute("opacity", p.alpha.toString());
+                    p.element.setAttribute("cx", p.x);
+                    p.element.setAttribute("cy", p.y);
+                    p.element.setAttribute("opacity", p.life);
                 }
             }
+
+            animationFrameId = requestAnimationFrame(mainGameLoop);
         }
 
         function evaluatingUserAnswer() {
             if (!engineActive) return;
+            
             const inputField = document.getElementById('answer-input');
-            const userRawGuess = inputField.value.trim().replace(/\s+/g, '');
-            if (!userRawGuess) return;
+            const ans = inputField.value.trim().replace(/\s+/g, "");
+            if (!ans) return;
 
-            let matchIndex = -1;
+            let isCorrect = false;
+
             for (let i = 0; i < activeBubbles.length; i++) {
-                if (activeBubbles[i].solutions.includes(userRawGuess)) {
-                    matchIndex = i;
+                const b = activeBubbles[i];
+                if (b.targets.includes(ans)) {
+                    const bonus = Math.floor(comboState / 3) * 5;
+                    scoreState += (10 + bonus);
+                    comboState += 1;
+                    
+                    createExplosionParticles(b.x, b.y);
+                    b.element.remove();
+                    activeBubbles.splice(i, 1);
+                    
+                    triggerAudioSynthesizer('correct');
+                    isCorrect = true;
                     break;
                 }
             }
 
-            if (matchIndex !== -1) {
-                triggerAudioSynthesizer('pop');
-                const matched = activeBubbles[matchIndex];
-                createExplosionEffect(matched.x, matched.y);
-                
-                comboState++; 
-                
-                let bonusScore = comboState >= 2 ? 10 : 0;
-                scoreState += 10 + bonusScore;
-                
-                refreshScoreBoard();
-                
-                if (bonusScore > 0) {
-                    pushNotificationToast(`🎯 정답! [${matched.solutions[0]}] 🔥 ${comboState}연속 콤보 보너스 (+10점추가!)`);
-                } else {
-                    pushNotificationToast(`🎯 정답! +10점 ([${matched.solutions[0]}])`);
-                }
-                
-                matched.dom.remove();
-                activeBubbles.splice(matchIndex, 1);
+            if (isCorrect) {
+                inputField.value = "";
+                updateScoreboardDisplay();
             } else {
-                pushNotificationToast("❌ 틀렸습니다! 다시 생각해보세요.");
+                comboState = 0;
+                triggerAudioSynthesizer('wrong');
+                showToastNotification("틀렸거나 일치하는 방울이 없습니다! 😵‍💫");
+                updateScoreboardDisplay();
             }
-
-            inputField.value = "";
             inputField.focus();
         }
 
-        function refreshScoreBoard() {
-            document.getElementById('score-display').innerText = `✨ 점수: ${scoreState}`;
-            document.getElementById('combo-display').innerText = `🔥 콤보: ${comboState}`;
-            document.getElementById('health-display').innerText = `생명: ` + `❤️ `.repeat(Math.max(0, healthState)) + `💔 `.repeat(Math.max(0, 5 - healthState));
+        function initializeGameSession() {
+            if (engineActive) return;
+            const name = document.getElementById('stu-name').value.trim();
+            if (!name) { alert("이름을 입력해주세요!"); return; }
+            
+            // 핵심 버그 수정: 브라우저 유저 클릭 상호작용 후 사운드 컨텍스트 잠금 해제 강제 유도
+            initAudio();
+
+            engineActive = true;
+            scoreState = 0;
+            comboState = 0;
+            healthState = 5;
+            timeRemaining = 180;
+            intervalConfig = 2000;
+            currentSpeedMultiplier = 1.0;
+            activeBubbles = [];
+            activeParticles = [];
+            lastGenerationTimestamp = 0; // 이 부분 누락으로 스폰이 안 되던 버그 교정
+            
+            document.getElementById('bubble-entities-group').innerHTML = "";
+            document.getElementById('fx-particles-group').innerHTML = "";
+            document.getElementById('svg-background-notice').style.display = 'none';
+            
+            document.getElementById('answer-input').disabled = false;
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('start-engine-btn').disabled = true;
+            document.getElementById('answer-input').focus();
+            
+            updateScoreboardDisplay();
+            
+            if (timerIntervalId) clearInterval(timerIntervalId);
+            timerIntervalId = setInterval(() => {
+                if (!engineActive) return;
+                timeRemaining--;
+                if (timeRemaining <= 0) {
+                    terminateGameSession(true);
+                }
+                updateScoreboardDisplay();
+            }, 1000);
+
+            animationFrameId = requestAnimationFrame(mainGameLoop);
         }
 
-function terminateGameSession(timeOverSuccess) {
-    engineActive = false;
-    if (timerIntervalId) clearInterval(timerIntervalId);
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        function updateScoreboardDisplay() {
+            document.getElementById('score-display').innerText = `✨ 점수: ${scoreState}`;
+            document.getElementById('combo-display').innerText = `🔥 콤보: ${comboState}`;
+            document.getElementById('health-display').innerText = `생명: ${"❤️ ".repeat(Math.max(0, healthState))}`;
+            
+            const min = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+            const sec = (timeRemaining % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `⏱️ 남은 시간: ${min}:${sec}`;
+        }
 
-    document.getElementById('answer-input').disabled = true;
-    document.getElementById('submit-btn').disabled = true;
-    document.getElementById('start-engine-btn').disabled = false;
+        function terminateGameSession(timeOverSuccess) {
+            engineActive = false;
+            if (timerIntervalId) clearInterval(timerIntervalId);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
-    const grade = document.getElementById('stu-grade').value;
-    const sClass = document.getElementById('stu-class').value;
-    const num = document.getElementById('stu-number').value;
-    const name = document.getElementById('stu-name').value.trim();
-    const scope = document.getElementById('mission-scope').value; 
+            document.getElementById('answer-input').disabled = true;
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('start-engine-btn').disabled = false;
 
-    const record = {
-        id: `${grade}학년 ${sClass}반 ${name}`,
-        score: scoreState
-    };
-    leaderboardMemory.push(record);
-    leaderboardMemory.sort((a, b) => b.score - a.score);
+            const grade = document.getElementById('stu-grade').value;
+            const sClass = document.getElementById('stu-class').value;
+            const num = document.getElementById('stu-number').value;
+            const name = document.getElementById('stu-name').value.trim();
+            const scope = document.getElementById('mission-scope').value; 
 
-    const rankBox = document.getElementById('rank-insertion-point');
-    rankBox.innerHTML = "";
-    leaderboardMemory.slice(0, 5).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = "rank-item";
-        div.innerHTML = `<span>${index+1}위. ${item.id}</span><strong>${item.score}점</strong>`;
-        rankBox.appendChild(div);
-    });
+            const record = {
+                id: `${grade}학년 ${sClass}반 ${name}`,
+                score: scoreState
+            };
+            leaderboardMemory.push(record);
+            leaderboardMemory.sort((a, b) => b.score - a.score);
 
-    const title = timeOverSuccess ? "🎉 실험 대성공! (시간 만료)" : "🎮 실험 종료 (생명력 소진)";
-    const msg = `<b>[실험 결과 보고서]</b><br><br>${grade}학년 ${sClass}반 ${num}번 ${name} 학생<br>최종 획득 점수: <b>${scoreState}점</b><br><br>수고하셨습니다! 결과는 자동으로 교사 시트에 기록됩니다.`;
-    
-    document.getElementById('modal-header-title').innerText = title;
-    document.getElementById('modal-core-body').innerHTML = msg;
-    document.getElementById('global-status-modal').classList.add('active');
+            const rankBox = document.getElementById('rank-insertion-point');
+            rankBox.innerHTML = "";
+            leaderboardMemory.slice(0, 5).forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "rank-item";
+                div.innerHTML = `<span>${index+1}위. ${item.id}</span><strong>${item.score}점</strong>`;
+                rankBox.appendChild(div);
+            });
 
-    triggerAudioSynthesizer('fanfare');
+            const title = timeOverSuccess ? "🎉 실험 대성공! (시간 만료)" : "🎮 실험 종료 (생명력 소진)";
+            const msg = `<b>[실험 결과 보고서]</b><br><br>${grade}학년 ${sClass}반 ${num}번 ${name} 학생<br>최종 획득 점수: <b>${scoreState}점</b><br><br>수고하셨습니다! 결과는 자동으로 교사 시트에 기록됩니다.`;
+            
+            document.getElementById('modal-header-title').innerText = title;
+            document.getElementById('modal-core-body').innerHTML = msg;
+            document.getElementById('global-status-modal').classList.add('active');
 
-    // 1. exec 오타 교정 완료!
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzNlHaMxsttsX7hjJy0ZlM4enM4F8YuCedGYB0IhYtuBZtfdUKR9STX5EPusMfmq7_bYw/exec"; 
+            triggerAudioSynthesizer('fanfare');
 
-    // 2. 구글 앱스 스크립트가 가장 좋아하는 표준 폼 데이터(Form Data) 형식으로 변환하여 전송
-    const formData = new FormData();
-    formData.append("gradeClassNum", `${grade}학년 ${sClass}반 ${num}번`);
-    formData.append("name", name);
-    formData.append("score", scoreState);
-    formData.append("scope", scope);
+            const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx1g6SwZxWZjPmfNOMAbgJPUlrfSnhxHcHWp_CQ2pglhacjhHNp4zDvQEbn69u9AcUAKw/exec"; 
 
-    // no-cors를 제거하여 데이터 유실을 원천 차단합니다.
-    fetch(GOOGLE_SHEET_URL, {
-        method: "POST",
-        body: formData
-    })
-    .then(response => console.log("구글 시트 전송 성공!"))
-    .catch(err => console.error("전송 에러 발생:", err));
-}
+            const payload = {
+                gradeClassNum: `${grade}학년 ${sClass}반 ${num}번`,
+                name: name,
+                score: scoreState,
+                scope: scope
+            };
+
+            fetch(GOOGLE_SHEET_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => console.log("Google Sheets 데이터 전송 완료"))
+            .catch(err => console.error("Google Sheets 전송 실패:", err));
+        }
 
         function dismissStatusModal() {
             document.getElementById('global-status-modal').classList.remove('active');
+            document.getElementById('svg-background-notice').style.display = 'block';
         }
-    </script>
-</body>
-</html>
+
+        function showToastNotification(text) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast-node';
+            toast.innerText = text;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = "opacity 0.5s ease";
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 500);
+            }, 1500);
+        }
+
