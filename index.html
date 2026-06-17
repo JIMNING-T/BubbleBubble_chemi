@@ -720,6 +720,7 @@
                 inputField.value = "";
                 updateScoreboardDisplay();
             } else {
+               healthState--; 
                 inputField.value = ""; //
                 comboState = 0;
                 triggerAudioSynthesizer('wrong');
@@ -742,8 +743,8 @@
             comboState = 0;
             healthState = 5;
             timeRemaining = 180;
-            intervalConfig = 4000;
-            currentSpeedMultiplier = 0.2;
+            intervalConfig = 3000;
+            currentSpeedMultiplier = 0.3;
             activeBubbles = [];
             activeParticles = [];
             lastGenerationTimestamp = 0; // 이 부분 누락으로 스폰이 안 되던 버그 교정
