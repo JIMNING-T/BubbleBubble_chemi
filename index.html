@@ -826,70 +826,63 @@
             document.getElementById('health-display').innerText = `생명: ` + `❤️ `.repeat(Math.max(0, healthState)) + `💔 `.repeat(Math.max(0, 5 - healthState));
         }
 
-        function terminateGameSession(isTimeOut) {
-            engineActive = false;
-            if(timerIntervalId) clearInterval(timerIntervalId);
-            
-            if(bgmActive) toggleBackgroundAmbiance();
-            triggerAudioSynthesizer('fanfare');
+function terminateGameSession(timeOverSuccess) {
+    engineActive = false;
+    if (timerIntervalId) clearInterval(timerIntervalId);
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
-            document.getElementById('answer-input').disabled = true;
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('start-engine-btn').disabled = false;
-            document.getElementById('svg-background-notice').style.display = "block";
+    document.getElementById('answer-input').disabled = true;
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('start-engine-btn').disabled = false;
 
-            const grade = document.getElementById('stu-grade').value;
-            const classNum = document.getElementById('stu-class').value;
-            const num = document.getElementById('stu-number').value;
-            const name = document.getElementById('stu-name').value;
-            const fullUserInfo = `${grade}학년 ${classNum}반 ${num}번 ${name}`;
+    const grade = document.getElementById('stu-grade').value;
+    const sClass = document.getElementById('stu-class').value;
+    const num = document.getElementById('stu-number').value;
+    const name = document.getElementById('stu-name').value.trim();
+    const scope = document.getElementById('mission-scope').value; 
 
-            leaderboardMemory.push({ user: fullUserInfo, score: scoreState });
-            leaderboardMemory.sort((a, b) => b.score - a.score);
-            leaderboardMemory = leaderboardMemory.slice(0, 5); 
-
-            const rankPoint = document.getElementById('rank-insertion-point');
-            rankPoint.innerHTML = "";
-            leaderboardMemory.forEach((record, index) => {
-                const item = document.createElement('div');
-                item.className = 'rank-item';
-                item.innerHTML = `<span>🥇 ${index + 1}등. ${record.user}</span> <span>${record.score}점</span>`;
-                rankPoint.appendChild(item);
-            });
-
-            const modalTitle = document.getElementById('modal-header-title');
-            const modalBody = document.getElementById('modal-core-body');
-            
-            if(isTimeOut) {
-                modalTitle.innerText = "⏱️ 실험 시간 종료!";
-                modalBody.innerHTML = `제한 시간 3분이 모두 경과하였습니다.<br><br><b>${name}</b> 학생의 최종 실험 점수는 <span style='color:var(--accent-color); font-size:1.4rem;'>${scoreState}점</span> 입니다.`;
-            } else {
-                modalTitle.innerText = "💥 생명 소진 (실험 실패)";
-                modalBody.innerHTML = `화학 물질 방울이 너무 많이 탈출했습니다!<br><br><b>${name}</b> 학생의 최종 실험 점수는 <span style='color:var(--accent-color); font-size:1.4rem;'>${scoreState}점</span> 입니다.`;
-            }
-
-            document.getElementById('global-status-modal').classList.add('active');
-            
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzNlHaMxsttsX7hjJy0ZlM4enM4F8YuCedGYB0IhYtuBZtfdUKR9STX5EPusMfmq7_bYw/exec"; 
-
-    const payload = {
-        gradeClassNum: `${grade}학년 ${sClass}반 ${num}번`,
-        name: name,
-        score: scoreState,
-        scope: scope
+    const record = {
+        id: `${grade}학년 ${sClass}반 ${name}`,
+        score: scoreState
     };
+    leaderboardMemory.push(record);
+    leaderboardMemory.sort((a, b) => b.score - a.score);
 
-    // 구글 시트 비동기 전송
+    const rankBox = document.getElementById('rank-insertion-point');
+    rankBox.innerHTML = "";
+    leaderboardMemory.slice(0, 5).forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "rank-item";
+        div.innerHTML = `<span>${index+1}위. ${item.id}</span><strong>${item.score}점</strong>`;
+        rankBox.appendChild(div);
+    });
+
+    const title = timeOverSuccess ? "🎉 실험 대성공! (시간 만료)" : "🎮 실험 종료 (생명력 소진)";
+    const msg = `<b>[실험 결과 보고서]</b><br><br>${grade}학년 ${sClass}반 ${num}번 ${name} 학생<br>최종 획득 점수: <b>${scoreState}점</b><br><br>수고하셨습니다! 결과는 자동으로 교사 시트에 기록됩니다.`;
+    
+    document.getElementById('modal-header-title').innerText = title;
+    document.getElementById('modal-core-body').innerHTML = msg;
+    document.getElementById('global-status-modal').classList.add('active');
+
+    triggerAudioSynthesizer('fanfare');
+
+    // 1. exec 오타 교정 완료!
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx1g6SwZxWZjPmfNOMAbgJPUlrfSnhxHcHWp_CQ2pglhacjhHNp4zDvQEbn69u9AcUAKw/exec"; 
+
+    // 2. 구글 앱스 스크립트가 가장 좋아하는 표준 폼 데이터(Form Data) 형식으로 변환하여 전송
+    const formData = new FormData();
+    formData.append("gradeClassNum", `${grade}학년 ${sClass}반 ${num}번`);
+    formData.append("name", name);
+    formData.append("score", scoreState);
+    formData.append("scope", scope);
+
+    // no-cors를 제거하여 데이터 유실을 원천 차단합니다.
     fetch(GOOGLE_SHEET_URL, {
         method: "POST",
-        mode: "no-cors", // CORS 에러 방지용 필수 설정
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+        body: formData
     })
-    .then(() => console.log("구글 시트 전송 성공!"))
-    .catch(err => console.error("구글 시트 전송 실패:", err));
+    .then(response => console.log("구글 시트 전송 성공!"))
+    .catch(err => console.error("전송 에러 발생:", err));
 }
 
         function dismissStatusModal() {
