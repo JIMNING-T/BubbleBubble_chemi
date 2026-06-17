@@ -869,26 +869,28 @@
             }
 
             document.getElementById('global-status-modal').classList.add('active');
-            const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx1g6SwZxWZjPmfNOMAbgJPUlrfSnhxHcHWp_CQ2pglhacjhHNp4zDvQEbn69u9AcUAKw/exec"; 
+            
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzNlHaMxsttsX7hjJy0ZlM4enM4F8YuCedGYB0IhYtuBZtfdUKR9STX5EPusMfmq7_bYw/exec"; 
 
-            const payload = {
-                gradeClassNum: `${grade}학년 ${sClass}반 ${num}번`,
-                name: name,
-                score: scoreState,
-                scope: scope
-            };
+    const payload = {
+        gradeClassNum: `${grade}학년 ${sClass}반 ${num}번`,
+        name: name,
+        score: scoreState,
+        scope: scope
+    };
 
-            fetch(GOOGLE_SHEET_URL, {
-                method: "POST",
-                mode: "no-cors", 
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(() => console.log("Google Sheets 데이터 전송 완료"))
-            .catch(err => console.error("Google Sheets 전송 실패:", err));
-        }
+    // 구글 시트 비동기 전송
+    fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors", // CORS 에러 방지용 필수 설정
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(() => console.log("구글 시트 전송 성공!"))
+    .catch(err => console.error("구글 시트 전송 실패:", err));
+}
 
         function dismissStatusModal() {
             document.getElementById('global-status-modal').classList.remove('active');
