@@ -720,6 +720,7 @@
                 inputField.value = "";
                 updateScoreboardDisplay();
             } else {
+                inputField.value = ""; //
                 comboState = 0;
                 triggerAudioSynthesizer('wrong');
                 showToastNotification("틀렸거나 일치하는 방울이 없습니다! 😵‍💫");
@@ -741,8 +742,8 @@
             comboState = 0;
             healthState = 5;
             timeRemaining = 180;
-            intervalConfig = 2000;
-            currentSpeedMultiplier = 1.0;
+            intervalConfig = 4000;
+            currentSpeedMultiplier = 0.2;
             activeBubbles = [];
             activeParticles = [];
             lastGenerationTimestamp = 0; // 이 부분 누락으로 스폰이 안 되던 버그 교정
