@@ -869,6 +869,25 @@
             }
 
             document.getElementById('global-status-modal').classList.add('active');
+            const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx1g6SwZxWZjPmfNOMAbgJPUlrfSnhxHcHWp_CQ2pglhacjhHNp4zDvQEbn69u9AcUAKw/exec"; 
+
+            const payload = {
+                gradeClassNum: `${grade}학년 ${sClass}반 ${num}번`,
+                name: name,
+                score: scoreState,
+                scope: scope
+            };
+
+            fetch(GOOGLE_SHEET_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => console.log("Google Sheets 데이터 전송 완료"))
+            .catch(err => console.error("Google Sheets 전송 실패:", err));
         }
 
         function dismissStatusModal() {
