@@ -408,7 +408,7 @@
         let timeRemaining = 180; 
         let timerIntervalId = null;
         let animationFrameId = null;
-        let currentSpeedMultiplier = 1.0; 
+        let currentSpeedMultiplier = 0.4; 
 
         let lastGenerationTimestamp = 0;
         let intervalConfig = 4000; 
@@ -770,7 +770,7 @@
                 }
                 updateScoreboardDisplay();
             }, 1000);
-
+            generateChemicalBubble();
             animationFrameId = requestAnimationFrame(mainGameLoop);
         }
 
