@@ -520,9 +520,9 @@
             textNode.setAttribute("dominant-baseline", "central");
             textNode.setAttribute("y", "0");
 
-            const regex = /([A-Za-z]+)(?:_([0-9]+))?(?:\^([0-9\+\-]+))?/g;
-            let match;
-            let hasComplexFormatting = false;
+        const regex = /([A-Za-z]+)(?:_([0-9]+))?(?:\^([0-9\+\-]+))?/g;
+           let match;
+           let hasComplexFormatting = false;
 
             while ((match = regex.exec(symbol)) !== null) {
                 hasComplexFormatting = true;
@@ -532,6 +532,7 @@
 
                 const tspanBase = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
                 tspanBase.textContent = base;
+                tspanBase.setAttribute("dy", "0");
                 textNode.appendChild(tspanBase);
 
                 if (sub) {
