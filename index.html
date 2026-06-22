@@ -411,7 +411,7 @@
         let currentSpeedMultiplier = 1.0; 
 
         let lastGenerationTimestamp = 0;
-        let intervalConfig = 3000; 
+        let intervalConfig = 2500; 
 
         let audioContextInstance = null;
         let audioMuteState = false;
@@ -621,7 +621,7 @@
             const group = document.getElementById('fx-particles-group');
             for (let i = 0; i < 4; i++) {
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                const angle = Math.random() * Math.PI * 2;
+                const angle = Math.random() * Math.PI * 3;
                 const speed = Math.random() * 0.5 + 1.5;
                 
                 circle.setAttribute("r", Math.random() * 5 + 3);
@@ -648,7 +648,7 @@
                 generateChemicalBubble();
                 lastGenerationTimestamp = timestamp;
                 if (intervalConfig > 1000) intervalConfig -= 3;
-                currentSpeedMultiplier += 0.01;
+                currentSpeedMultiplier += 0.02;
             }
 
             for (let i = activeBubbles.length - 1; i >= 0; i--) {
@@ -744,7 +744,7 @@
             comboState = 0;
             healthState = 5;
             timeRemaining = 180;
-            intervalConfig = 3000;
+            intervalConfig = 2500;
             currentSpeedMultiplier = 0.2;
             activeBubbles = [];
             activeParticles = [];
