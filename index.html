@@ -411,7 +411,7 @@
         let currentSpeedMultiplier = 0.8; 
 
         let lastGenerationTimestamp = 0;
-        let intervalConfig = 2500; 
+        let intervalConfig = 3000; 
 
         let audioContextInstance = null;
         let audioMuteState = false;
@@ -580,7 +580,7 @@
             const radius = 55;
             const x = Math.random() * (canvasWidth - radius * 2) + radius;
             const y = 60;
-            const speed = (Math.random() * 0.8 + 0.02) * currentSpeedMultiplier;
+            const speed = (Math.random() * 1.0 + 0.8) * currentSpeedMultiplier;
 
             const colors = ["#ffadad", "#ffd6a5", "#fdffb6", "#caf0f8", "#dec0f1", "#b9fbc0"];
             const bubbleColor = colors[Math.floor(Math.random() * colors.length)];
@@ -647,8 +647,8 @@
             if (timestamp - lastGenerationTimestamp > intervalConfig) {
                 generateChemicalBubble();
                 lastGenerationTimestamp = timestamp;
-                if (intervalConfig > 900) intervalConfig -= 25;
-                currentSpeedMultiplier += 0.05;
+                if (intervalConfig > 1000) intervalConfig -= 5;
+                currentSpeedMultiplier += 0.01;
             }
 
             for (let i = activeBubbles.length - 1; i >= 0; i--) {
