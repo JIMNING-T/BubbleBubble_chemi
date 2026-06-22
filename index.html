@@ -580,7 +580,7 @@
             const radius = 55;
             const x = Math.random() * (canvasWidth - radius * 2) + radius;
             const y = 60;
-            const speed = (Math.random() * 0.8 + 0.1) * currentSpeedMultiplier;
+            const speed = (Math.random() * 0.8 + 0.06) * currentSpeedMultiplier;
 
             const colors = ["#ffadad", "#ffd6a5", "#fdffb6", "#caf0f8", "#dec0f1", "#b9fbc0"];
             const bubbleColor = colors[Math.floor(Math.random() * colors.length)];
@@ -745,7 +745,7 @@
             healthState = 5;
             timeRemaining = 180;
             intervalConfig = 2000;
-            currentSpeedMultiplier = 1.1;
+            currentSpeedMultiplier = 0.8;
             activeBubbles = [];
             activeParticles = [];
             lastGenerationTimestamp = 0; // 이 부분 누락으로 스폰이 안 되던 버그 교정
