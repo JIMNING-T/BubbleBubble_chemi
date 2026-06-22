@@ -411,7 +411,7 @@
         let currentSpeedMultiplier = 1.0; 
 
         let lastGenerationTimestamp = 0;
-        let intervalConfig = 3000; 
+        let intervalConfig = 3500; 
 
         let audioContextInstance = null;
         let audioMuteState = false;
@@ -580,7 +580,7 @@
             const radius = 55;
             const x = Math.random() * (canvasWidth - radius * 2) + radius;
             const y = 60;
-            const speed = (Math.random() * 1.0 + 0.8) * currentSpeedMultiplier;
+            const speed = (Math.random() * 1.0 + 0.6) * currentSpeedMultiplier;
 
             const colors = ["#ffadad", "#ffd6a5", "#fdffb6", "#caf0f8", "#dec0f1", "#b9fbc0"];
             const bubbleColor = colors[Math.floor(Math.random() * colors.length)];
@@ -635,7 +635,7 @@
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     life: 1.0,
-                    decay: Math.random() * 0.05 + 0.04
+                    decay: Math.random() * 0.05 + 0.03
                 });
             }
         }
@@ -744,7 +744,7 @@
             comboState = 0;
             healthState = 5;
             timeRemaining = 180;
-            intervalConfig = 2500;
+            intervalConfig = 3000;
             currentSpeedMultiplier = 0.2;
             activeBubbles = [];
             activeParticles = [];
