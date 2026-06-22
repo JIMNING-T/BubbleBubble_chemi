@@ -408,7 +408,7 @@
         let timeRemaining = 180; 
         let timerIntervalId = null;
         let animationFrameId = null;
-        let currentSpeedMultiplier = 0.8; 
+        let currentSpeedMultiplier = 1.0; 
 
         let lastGenerationTimestamp = 0;
         let intervalConfig = 3000; 
@@ -619,10 +619,10 @@
 
         function createExplosionParticles(x, y) {
             const group = document.getElementById('fx-particles-group');
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 4; i++) {
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 1 + 1.5;
+                const speed = Math.random() * 0.5 + 1.5;
                 
                 circle.setAttribute("r", Math.random() * 5 + 3);
                 circle.setAttribute("fill", "#4ea8de");
@@ -647,7 +647,7 @@
             if (timestamp - lastGenerationTimestamp > intervalConfig) {
                 generateChemicalBubble();
                 lastGenerationTimestamp = timestamp;
-                if (intervalConfig > 1000) intervalConfig -= 5;
+                if (intervalConfig > 1000) intervalConfig -= 3;
                 currentSpeedMultiplier += 0.01;
             }
 
@@ -744,7 +744,7 @@
             comboState = 0;
             healthState = 5;
             timeRemaining = 180;
-            intervalConfig = 2500;
+            intervalConfig = 3000;
             currentSpeedMultiplier = 0.2;
             activeBubbles = [];
             activeParticles = [];
