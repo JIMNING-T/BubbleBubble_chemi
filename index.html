@@ -409,9 +409,10 @@
         let timerIntervalId = null;
         let animationFrameId = null;
         let currentSpeedMultiplier = 1.0; 
+            currentSpeedMultiplier += 0.05;
 
         let lastGenerationTimestamp = 0;
-        let intervalConfig = 2500; 
+        let intervalConfig = 2000; 
 
         let audioContextInstance = null;
         let audioMuteState = false;
