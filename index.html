@@ -408,7 +408,7 @@
         let timeRemaining = 180; 
         let timerIntervalId = null;
         let animationFrameId = null;
-        let currentSpeedMultiplier = 1.0; 
+        let currentSpeedMultiplier = 0.8; 
 
         let lastGenerationTimestamp = 0;
         let intervalConfig = 2000; 
@@ -580,7 +580,7 @@
             const radius = 55;
             const x = Math.random() * (canvasWidth - radius * 2) + radius;
             const y = 60;
-            const speed = (Math.random() * 1.1 + 0.3) * currentSpeedMultiplier;
+            const speed = (Math.random() * 0.8 + 0.1) * currentSpeedMultiplier;
 
             const colors = ["#ffadad", "#ffd6a5", "#fdffb6", "#caf0f8", "#dec0f1", "#b9fbc0"];
             const bubbleColor = colors[Math.floor(Math.random() * colors.length)];
@@ -648,7 +648,7 @@
                 generateChemicalBubble();
                 lastGenerationTimestamp = timestamp;
                 if (intervalConfig > 900) intervalConfig -= 25;
-                currentSpeedMultiplier += 0.3;
+                currentSpeedMultiplier += 0.1;
             }
 
             for (let i = activeBubbles.length - 1; i >= 0; i--) {
