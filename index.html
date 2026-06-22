@@ -649,7 +649,7 @@
                 generateChemicalBubble();
                 lastGenerationTimestamp = timestamp;
                 if (intervalConfig > 900) intervalConfig -= 25;
-                currentSpeedMultiplier += 0.02;
+                currentSpeedMultiplier += 0.3;
             }
 
             for (let i = activeBubbles.length - 1; i >= 0; i--) {
@@ -745,8 +745,8 @@
             comboState = 0;
             healthState = 5;
             timeRemaining = 180;
-            intervalConfig = 4000;
-            currentSpeedMultiplier = 0.5;
+            intervalConfig = 2000;
+            currentSpeedMultiplier = 1.1;
             activeBubbles = [];
             activeParticles = [];
             lastGenerationTimestamp = 0; // 이 부분 누락으로 스폰이 안 되던 버그 교정
